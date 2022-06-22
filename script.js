@@ -8,17 +8,20 @@ const multiplyButton = document.querySelector("#multiply");
 const divideButton = document.querySelector("#divide");
 const evaluateButton = document.querySelector("#evaluate");
 
-let currentOperand = 0;
-let newOperand = 0;
+let currentOperand = null;
+let newOperand = null;
 let result = null;
+let currentOperation = "";
 
 // Add numbers to the calculator display as you click the buttons
 
 function appendNumberToDisplay() {
-  if (displayOutput.textContent == result) {
+  if (newOperand === null) {
     displayOutput.textContent = "";
   }
+
   displayOutput.textContent += this.textContent;
+  newOperand = parseFloat(displayOutput.textContent);
 }
 
 numberButtons.forEach((button) => {
@@ -37,22 +40,34 @@ decimalButton.addEventListener("click", appendDecimal);
 // Clear all contents
 
 function clearAll() {
-  currentOperand = 0;
-  newOperand = 0;
+  currentOperand = null;
+  newOperand = null;
   result = null;
   displayOutput.textContent = "";
 }
 
 allClearButton.addEventListener("click", clearAll);
 
+// Prepare the display output by removing the result. Setting newOperand to null will allow appendNumberToDisplay to start with a blank output.
+
+function clearDisplayForNextOperation() {
+  if (currentOperand === null) {
+    currentOperand = parseFloat(displayOutput.textContent);
+    result = parseFloat(displayOutput.textContent);
+    newOperand = null;
+  } else {
+    displayOutput.textContent = result;
+    newOperand = null;
+  }
+  decimalButton.removeAttribute("disabled");
+}
+
 // Addition Operation
 
 function addNumbers() {
-  newOperand = displayOutput.textContent;
-  result = parseFloat(currentOperand) + parseFloat(newOperand);
-  currentOperand += parseFloat(newOperand);
-  displayOutput.textContent = result;
-  decimalButton.removeAttribute("disabled");
+  evalPreviousOperation();
+  currentOperation = "add";
+  clearDisplayForNextOperation();
 }
 
 addButton.addEventListener("click", addNumbers);
@@ -60,11 +75,9 @@ addButton.addEventListener("click", addNumbers);
 // Subtraction Operation
 
 function subtractNumbers() {
-  newOperand = displayOutput.textContent;
-  result = parseFloat(currentOperand) - parseFloat(newOperand);
-  currentOperand -= parseFloat(newOperand);
-  displayOutput.textContent = result;
-  decimalButton.removeAttribute("disabled");
+  evalPreviousOperation();
+  currentOperation = "subtract";
+  clearDisplayForNextOperation();
 }
 
 subtractButton.addEventListener("click", subtractNumbers);
@@ -72,11 +85,9 @@ subtractButton.addEventListener("click", subtractNumbers);
 // Multiplication Operation
 
 function multiplyNumbers() {
-  newOperand = displayOutput.textContent;
-  result = parseFloat(currentOperand) * parseFloat(newOperand);
-  currentOperand *= parseFloat(newOperand);
-  displayOutput.textContent = result;
-  decimalButton.removeAttribute("disabled");
+  evalPreviousOperation();
+  currentOperation = "multiply";
+  clearDisplayForNextOperation();
 }
 
 multiplyButton.addEventListener("click", multiplyNumbers);
@@ -84,15 +95,39 @@ multiplyButton.addEventListener("click", multiplyNumbers);
 // Division Operation
 
 function divideNumbers() {
-  newOperand = displayOutput.textContent;
-  result = parseFloat(currentOperand) / parseFloat(newOperand);
-  currentOperand /= parseFloat(newOperand);
-  displayOutput.textContent = result;
-  decimalButton.removeAttribute("disabled");
+  evalPreviousOperation();
+  currentOperation = "divide";
+  clearDisplayForNextOperation();
 }
 
 divideButton.addEventListener("click", divideNumbers);
 
-// function setNumberAsOperand() {
-//   return parseFloat(currentOperand) + parseFloat(newOperand);
-// }
+// Evaluate the previous operation
+
+function evalPreviousOperation() {
+  if (currentOperand === null) {
+    return;
+  }
+  switch (currentOperation) {
+    case "add":
+      result = Math.round((currentOperand + newOperand) * 10000) / 10000;
+      currentOperand = result;
+      break;
+    case "subtract":
+      result = Math.round((currentOperand - newOperand) * 10000) / 10000;
+      currentOperand = result;
+      break;
+    case "multiply":
+      result = Math.round(currentOperand * newOperand * 10000) / 10000;
+      currentOperand = result;
+      break;
+    case "divide":
+      result = Math.round((currentOperand / newOperand) * 10000) / 10000;
+      currentOperand = result;
+      break;
+  }
+}
+
+// console.log(`currentOperand is ${currentOperand}`);
+// console.log(`newOperand is ${newOperand}`);
+// console.log(`result is ${result}`);
